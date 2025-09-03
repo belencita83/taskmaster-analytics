@@ -1,0 +1,19 @@
+# Entornos virtuales de Python
+venv/
+env/
+.venv/
+
+# Archivos de base de datos (los de SQLite van aquí)
+*.db
+*.sqlite3
+
+# Archivos de entorno con contraseñas (nunca los subas!)
+.env
+
+# Directorio de caché de Python
+__pycache__/
+*.py[cod]
+
+# Directorio de dependencias instaladas (si usas virtualenv, no las subas)
+lib/
+lib64/
