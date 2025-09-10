@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "titulo": "Aprender a programar en Python",
+    "descripcion": "Completar el proyecto TaskMaster Analytics",
+    "estado": "pendiente",
+    "prioridad": "alta",
+    "proyecto": "Estudios",
+    "fecha_creacion": "2025-09-10T00:19:39.975815",
+    "fecha_vencimiento": null,
+    "fecha_completada": null
+  }
+]
