@@ -1,33 +1,46 @@
+import datetime
 # core/models.py
 
 class Tarea:
-    """Clase que representa una tarea individual."""
+    """Clase que representa una tarea individual con campos de auditoría."""
     
-    def __init__(self, titulo, descripcion="", prioridad="media", proyecto=None, fecha_vencimiento=None):
+    def __init__(self, titulo, descripcion="", prioridad="media", proyecto=None, fecha_vencimiento=None, usuario="sistema"):
         # Información básica
         self.titulo = titulo
         self.descripcion = descripcion
-        self.proyecto = proyecto  # Nombre del proyecto al que pertenece
+        self.proyecto = proyecto
         
         # Estados y prioridad
-        self.estado = "pendiente"  # Puede ser: pendiente, en_progreso, completada
-        self.prioridad = prioridad  # Puede ser: baja, media, alta
+        self.estado = "pendiente"
+        self.prioridad = prioridad
         
         # Fechas
-        self.fecha_creacion = None  # Se establecerá al guardar
+        self.fecha_creacion = None
         self.fecha_vencimiento = fecha_vencimiento
         self.fecha_completada = None
         
-        # Identificador único (para poder buscar y modificar tareas específicas)
+        # Identificador único
         self.id = None
+        
+        # CAMPOS DE AUDITORÍA (nuevos)
+        self.creado_por = usuario
+        self.actualizado_por = usuario
+        self.actualizado_en = None
+        self.usuario = usuario
 
-    def marcar_completada(self):
-        """Marca la tarea como completada y establece la fecha de finalización."""
+    def marcar_completada(self, usuario="sistema"):
+        """Marca la tarea como completada con auditoría."""
         self.estado = "completada"
-        # Aquí se debería establecer la fecha actual. Lo haremos en el storage.
+        self.actualizado_por = usuario
+        self.actualizado_en = datetime.now()
+
+    def actualizar_auditoria(self, usuario="sistema"):
+        """Actualiza campos de auditoría."""
+        self.actualizado_por = usuario
+        self.actualizado_en = datetime.now()
 
     def __str__(self):
-        """Representación en string de la tarea, útil para imprimir."""
+        """Representación en string de la tarea."""
         emoji_estado = {"pendiente": "⏳", "en_progreso": "🚧", "completada": "✅"}
         emoji_prioridad = {"baja": "🔵", "media": "🟡", "alta": "🔴"}
-        return f"{emoji_estado[self.estado]} {emoji_prioridad[self.prioridad]} {self.titulo}"
+        return f"{emoji_estado[self.estado]} {emoji_prioridad[self.prioridad]} {self.titulo} [by: {self.usuario}]"
