@@ -9,9 +9,15 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from core.models import Tarea
 from core.storage import GestorAlmacenamiento
 
+from core.managers import TareaManager, ReporteManager
+from core.exportadores import ExportadorReportes
+
 class TaskMasterApp:
     def __init__(self):
-        self.gestor = GestorAlmacenamiento()
+        self.gestor = GestorAlmacenamiento("sqlite")
+        self.tarea_manager = TareaManager(self.gestor)  # ← NUEVO
+        self.reporte_manager = ReporteManager(self.tarea_manager)  # ← NUEVO
+        self.exportador = ExportadorReportes()  # ← NUEVO
         self.tareas = self.gestor.cargar_tareas()
         self.proximo_id = max([t.id for t in self.tareas], default=0) + 1
 
@@ -26,7 +32,8 @@ class TaskMasterApp:
             print("3. ✅ Marcar tarea como completada")
             print("4. ❌ Eliminar tarea")
             print("5. 📊 Ver dashboard de productividad")
-            print("6. 💾 Guardar y salir")
+            print("6. 📤 Exportar reportes")
+            print("7. 💾 Guardar y salir")
             print("="*50)
 
             opcion = input("Selecciona una opción (1-6): ").strip()
@@ -42,6 +49,8 @@ class TaskMasterApp:
             elif opcion == "5":
                 self.mostrar_dashboard()
             elif opcion == "6":
+                self.exportar_reportes()
+            elif opcion == "7":
                 self.guardar_y_salir()
                 break
             else:
@@ -85,8 +94,11 @@ class TaskMasterApp:
         nueva_tarea.fecha_creacion = datetime.now()
         self.proximo_id += 1
         
-        self.tareas.append(nueva_tarea)
-        print(f"✅ Tarea '{titulo}' creada exitosamente!")
+        if self.gestor.guardar_tarea(nueva_tarea):
+            self.tareas.append(nueva_tarea)
+            print(f"✅ Tarea '{titulo}' creada exitosamente!")
+        else:
+            print("❌ Error guardando la tarea")
 
     def listar_tareas(self):
         """Lista todas las tareas."""
@@ -119,7 +131,11 @@ class TaskMasterApp:
                 tarea = self.tareas[numero]
                 tarea.marcar_completada()
                 tarea.fecha_completada = datetime.now()
-                print(f"✅ Tarea '{tarea.titulo}' marcada como COMPLETADA!")
+                tarea.actualizar_auditoria("usuario_actual")
+                if self.gestor.guardar_tarea(tarea):
+                    print(f"✅ Tarea '{tarea.titulo}' marcada como COMPLETADA!")
+                else:
+                    print("❌ Error actualizando la tarea")
             else:
                 print("❌ Número de tarea no válido.")
         except ValueError:
@@ -135,8 +151,12 @@ class TaskMasterApp:
         try:
             numero = int(input("\nNúmero de la tarea a eliminar: ")) - 1
             if 0 <= numero < len(self.tareas):
-                tarea = self.tareas.pop(numero)
-                print(f"🗑️ Tarea '{tarea.titulo}' eliminada exitosamente!")
+                tarea = self.tareas[numero]
+                if self.gestor.eliminar_tarea(tarea.id):
+                    self.tareas.pop(numero)
+                    print(f"🗑️ Tarea '{tarea.titulo}' eliminada exitosamente!")
+                else:
+                    print("❌ Error eliminando la tarea")
             else:
                 print("❌ Número de tarea no válido.")
         except ValueError:
@@ -165,6 +185,37 @@ class TaskMasterApp:
         for prioridad in ["alta", "media", "baja"]:
             count = sum(1 for t in self.tareas if t.prioridad == prioridad)
             print(f"   {prioridad.capitalize()}: {count}")
+
+    def exportar_reportes(self):
+        """Exporta reportes en diferentes formatos."""
+        print("\n" + "="*50)
+        print("📤 EXPORTAR REPORTES")
+        print("="*50)
+        
+        # Generar reporte
+        reporte = self.reporte_manager.generar_reporte_completo()
+        
+        print("Formatos disponibles:")
+        print("1. 📊 CSV (Excel)")
+        print("2. 🔤 JSON")
+        print("3. 📝 Texto")
+        
+        opcion = input("Selecciona formato (1-3): ").strip()
+        
+        try:
+            if opcion == "1":
+                archivo = self.exportador.exportar_csv(reporte)
+                print(f"✅ Reporte exportado a: {archivo}")
+            elif opcion == "2":
+                archivo = self.exportador.exportar_json(reporte)
+                print(f"✅ Reporte exportado a: {archivo}")
+            elif opcion == "3":
+                archivo = self.exportador.exportar_texto(reporte)
+                print(f"✅ Reporte exportado a: {archivo}")
+            else:
+                print("❌ Opción no válida")
+        except Exception as e:
+            print(f"❌ Error exportando reporte: {e}")
 
     def guardar_y_salir(self):
         """Guarda todas las tareas y sale."""
