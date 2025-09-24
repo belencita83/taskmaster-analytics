@@ -1,0 +1,45 @@
+{
+  "periodo_analisis": "Últimos 30 días",
+  "fecha_generacion": "2025-09-24T03:25:31.514008",
+  "usuario": "todos",
+  "calificaciones": {
+    "completitud": 0,
+    "puntualidad": 0,
+    "priorizacion": 0,
+    "consistencia": 0,
+    "velocidad": 0
+  },
+  "matriz_productividad": {
+    "Lunes": {
+      "creadas": 0,
+      "completadas": 0
+    },
+    "Martes": {
+      "creadas": 0,
+      "completadas": 0
+    },
+    "Miércoles": {
+      "creadas": 0,
+      "completadas": 0
+    },
+    "Jueves": {
+      "creadas": 0,
+      "completadas": 0
+    },
+    "Viernes": {
+      "creadas": 0,
+      "completadas": 0
+    },
+    "Sábado": {
+      "creadas": 0,
+      "completadas": 0
+    },
+    "Domingo": {
+      "creadas": 0,
+      "completadas": 0
+    }
+  },
+  "analisis_temporal": {},
+  "eficiencia_proyectos": {},
+  "score_final": 0.0
+}

@@ -12,12 +12,17 @@ from core.storage import GestorAlmacenamiento
 from core.managers import TareaManager, ReporteManager
 from core.exportadores import ExportadorReportes
 
+from core.analytics import AnalyticsEngine
+from core.visualizacion import VisualizadorMetricas
+
 class TaskMasterApp:
     def __init__(self):
         self.gestor = GestorAlmacenamiento("sqlite")
-        self.tarea_manager = TareaManager(self.gestor)  # ← NUEVO
-        self.reporte_manager = ReporteManager(self.tarea_manager)  # ← NUEVO
-        self.exportador = ExportadorReportes()  # ← NUEVO
+        self.tarea_manager = TareaManager(self.gestor)
+        self.reporte_manager = ReporteManager(self.tarea_manager)
+        self.analytics_engine = AnalyticsEngine(self.tarea_manager)  # ← NUEVO
+        self.visualizador = VisualizadorMetricas()  # ← NUEVO
+        self.exportador = ExportadorReportes()
         self.tareas = self.gestor.cargar_tareas()
         self.proximo_id = max([t.id for t in self.tareas], default=0) + 1
 
@@ -32,8 +37,9 @@ class TaskMasterApp:
             print("3. ✅ Marcar tarea como completada")
             print("4. ❌ Eliminar tarea")
             print("5. 📊 Ver dashboard de productividad")
-            print("6. 📤 Exportar reportes")
-            print("7. 💾 Guardar y salir")
+            print("6. 📈 Matriz avanzada de métricas")
+            print("7. 📤 Exportar reportes")
+            print("0. 💾 Guardar y salir")
             print("="*50)
 
             opcion = input("Selecciona una opción (1-6): ").strip()
@@ -49,8 +55,10 @@ class TaskMasterApp:
             elif opcion == "5":
                 self.mostrar_dashboard()
             elif opcion == "6":
-                self.exportar_reportes()
+                self.mostrar_matriz_metricas()
             elif opcion == "7":
+                self.exportar_reportes()
+            elif opcion == "0":
                 self.guardar_y_salir()
                 break
             else:
@@ -217,6 +225,32 @@ class TaskMasterApp:
         except Exception as e:
             print(f"❌ Error exportando reporte: {e}")
 
+    def mostrar_matriz_metricas(self):
+        """Muestra la matriz avanzada de métricas."""
+        print("\n" + "="*50)
+        print("📈 MATRIZ AVANZADA DE MÉTRICAS")
+        print("="*50)
+        try:
+            # Generar matriz de métricas
+            matriz = self.analytics_engine.generar_matriz_metricas()
+            # Mostrar visualización
+            self.visualizador.mostrar_matriz_metricas(matriz)
+            # Mostrar recomendaciones
+            print("\n💡 RECOMENDACIONES:")
+            print("-" * 50)
+            recomendaciones = self.visualizador.generar_recomendaciones(matriz)
+            for i, recomendacion in enumerate(recomendaciones, 1):
+                print(f"{i}. {recomendacion}")
+            # Opción para exportar
+            exportar = input("\n¿Exportar matriz a JSON? (s/n): ").strip().lower()
+            if exportar == 's':
+                from core.exportadores import ExportadorReportes
+                exportador = ExportadorReportes()
+                archivo = exportador.exportar_json(matriz, "matriz_metricas.json")
+                print(f"✅ Matriz exportada a: {archivo}")
+        except Exception as e:
+            print(f"❌ Error generando matriz de métricas: {e}")
+    
     def guardar_y_salir(self):
         """Guarda todas las tareas y sale."""
         self.gestor.guardar_tareas(self.tareas)
