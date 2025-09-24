@@ -16,15 +16,20 @@ from core.analytics import AnalyticsEngine
 from core.visualizacion import VisualizadorMetricas
 
 class TaskMasterApp:
+
     def __init__(self):
         self.gestor = GestorAlmacenamiento("sqlite")
         self.tarea_manager = TareaManager(self.gestor)
         self.reporte_manager = ReporteManager(self.tarea_manager)
-        self.analytics_engine = AnalyticsEngine(self.tarea_manager)  # ← NUEVO
-        self.visualizador = VisualizadorMetricas()  # ← NUEVO
+        self.analytics_engine = AnalyticsEngine(self.tarea_manager)
+        self.visualizador = VisualizadorMetricas()
         self.exportador = ExportadorReportes()
+        
+        # ✅ CORRECCIÓN: Cargar tareas correctamente
         self.tareas = self.gestor.cargar_tareas()
-        self.proximo_id = max([t.id for t in self.tareas], default=0) + 1
+        self.proximo_id = max([t.id for t in self.tareas], default=0) + 1 if self.tareas else 1
+        
+        print(f"📊 Sistema inicializado. Tareas cargadas: {len(self.tareas)}")
 
     def mostrar_menu_principal(self):
         """Muestra el menú principal y maneja las opciones."""
@@ -40,9 +45,10 @@ class TaskMasterApp:
             print("6. 📈 Matriz avanzada de métricas")
             print("7. 📤 Exportar reportes")
             print("0. 💾 Guardar y salir")
+            print("99. 🔍 Debug BD")  # ← Temporal para debug
             print("="*50)
 
-            opcion = input("Selecciona una opción (1-6): ").strip()
+            opcion = input("Selecciona una opción (0-7): ").strip()
 
             if opcion == "1":
                 self.crear_tarea()
@@ -58,6 +64,8 @@ class TaskMasterApp:
                 self.mostrar_matriz_metricas()
             elif opcion == "7":
                 self.exportar_reportes()
+            elif opcion == "99":
+                self.debug_base_datos()
             elif opcion == "0":
                 self.guardar_y_salir()
                 break
@@ -89,24 +97,24 @@ class TaskMasterApp:
         proyecto = input("Proyecto (opcional): ").strip() or None
         fecha_vencimiento = input("Fecha de vencimiento (YYYY-MM-DD, opcional): ").strip() or None
 
-        # Crear la nueva tarea
-        nueva_tarea = Tarea(
-            titulo=titulo,
-            descripcion=descripcion,
-            prioridad=prioridad,
-            proyecto=proyecto,
-            fecha_vencimiento=fecha_vencimiento
-        )
-        
-        nueva_tarea.id = self.proximo_id
-        nueva_tarea.fecha_creacion = datetime.now()
-        self.proximo_id += 1
-        
-        if self.gestor.guardar_tarea(nueva_tarea):
-            self.tareas.append(nueva_tarea)
-            print(f"✅ Tarea '{titulo}' creada exitosamente!")
-        else:
-            print("❌ Error guardando la tarea")
+        try:
+            # ✅ CORRECCIÓN: Usar el TareaManager para crear la tarea
+            nueva_tarea = self.tarea_manager.crear_tarea(
+                titulo=titulo,
+                descripcion=descripcion,
+                prioridad=prioridad,
+                proyecto=proyecto,
+                usuario="usuario_actual"  # Puedes capturar el usuario real después
+            )
+            
+            # ✅ CORRECCIÓN: Actualizar la lista local
+            self.tareas = self.gestor.cargar_tareas()  # Recargar desde BD
+            self.proximo_id = max([t.id for t in self.tareas], default=0) + 1
+            
+            print(f"✅ Tarea '{titulo}' creada exitosamente! (ID: {nueva_tarea.id})")
+            
+        except Exception as e:
+            print(f"❌ Error creando tarea: {e}")
 
     def listar_tareas(self):
         """Lista todas las tareas."""
@@ -137,13 +145,14 @@ class TaskMasterApp:
             numero = int(input("\nNúmero de la tarea a marcar como completada: ")) - 1
             if 0 <= numero < len(self.tareas):
                 tarea = self.tareas[numero]
-                tarea.marcar_completada()
-                tarea.fecha_completada = datetime.now()
-                tarea.actualizar_auditoria("usuario_actual")
+                tarea.marcar_completada("usuario_actual")
+                
+                # ✅ CORRECCIÓN: Guardar en BD y recargar
                 if self.gestor.guardar_tarea(tarea):
+                    self.tareas = self.gestor.cargar_tareas()  # Recargar desde BD
                     print(f"✅ Tarea '{tarea.titulo}' marcada como COMPLETADA!")
                 else:
-                    print("❌ Error actualizando la tarea")
+                    print("❌ Error actualizando la tarea en la base de datos")
             else:
                 print("❌ Número de tarea no válido.")
         except ValueError:
@@ -160,11 +169,13 @@ class TaskMasterApp:
             numero = int(input("\nNúmero de la tarea a eliminar: ")) - 1
             if 0 <= numero < len(self.tareas):
                 tarea = self.tareas[numero]
+                
+                # ✅ CORRECCIÓN: Eliminar de BD y recargar
                 if self.gestor.eliminar_tarea(tarea.id):
-                    self.tareas.pop(numero)
+                    self.tareas = self.gestor.cargar_tareas()  # Recargar desde BD
                     print(f"🗑️ Tarea '{tarea.titulo}' eliminada exitosamente!")
                 else:
-                    print("❌ Error eliminando la tarea")
+                    print("❌ Error eliminando la tarea de la base de datos")
             else:
                 print("❌ Número de tarea no válido.")
         except ValueError:
@@ -256,6 +267,37 @@ class TaskMasterApp:
         self.gestor.guardar_tareas(self.tareas)
         print("💾 Todos los datos han sido guardados exitosamente!")
         print("👋 ¡Hasta pronto!")
+
+    def debug_base_datos(self):
+        """Método temporal para debuggear la base de datos."""
+        print("\n🔍 DEBUG - INFORMACIÓN DE BASE DE DATOS")
+        print("="*40)
+        
+        # Verificar conexión a la base de datos
+        try:
+            import sqlite3
+            conn = sqlite3.connect("data/taskmaster.db")
+            cursor = conn.cursor()
+            
+            # Contar tareas en la base de datos
+            cursor.execute("SELECT COUNT(*) FROM tareas")
+            count_bd = cursor.fetchone()[0]
+            
+            print(f"Tareas en base de datos: {count_bd}")
+            print(f"Tareas en memoria: {len(self.tareas)}")
+            
+            # Mostrar todas las tareas en la BD
+            cursor.execute("SELECT id, titulo, estado FROM tareas")
+            tareas_bd = cursor.fetchall()
+            
+            print("\nTareas en base de datos:")
+            for tarea in tareas_bd:
+                print(f"  ID: {tarea[0]}, Título: {tarea[1]}, Estado: {tarea[2]}")
+            
+            conn.close()
+            
+        except Exception as e:
+            print(f"❌ Error accediendo a la base de datos: {e}")
 
 def main():
     """Función principal de la aplicación."""
