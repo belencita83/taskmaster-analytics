@@ -1,0 +1,28 @@
+{
+  "fecha_generacion": "2025-09-30T23:18:35.872219",
+  "usuario": "todos",
+  "resumen": {
+    "total_tareas": 4,
+    "completadas": 1,
+    "pendientes": 3,
+    "porcentaje_completado": 25.0
+  },
+  "tareas_por_estado": {
+    "pendiente": 3,
+    "en_progreso": 0,
+    "completada": 1
+  },
+  "tareas_por_prioridad": {
+    "baja": 1,
+    "media": 1,
+    "alta": 2
+  },
+  "tareas_por_proyecto": {
+    "Salud": 1,
+    "Desarrollo": 1,
+    "Universidad": 2
+  },
+  "tareas_vencidas": 0,
+  "tareas_proximas_vencer": 0,
+  "eficiencia_semanal": 1
+}

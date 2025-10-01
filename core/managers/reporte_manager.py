@@ -52,12 +52,13 @@ class ReporteManager:
         return {proyecto: sum(1 for t in tareas if t.proyecto == proyecto) for proyecto in proyectos}
     
     def _calcular_eficiencia_semanal(self, tareas):
+        """Calcula eficiencia semanal - VERSIÓN CORREGIDA."""
         # Tareas completadas en los últimos 7 días
         una_semana_atras = datetime.now() - timedelta(days=7)
         completadas_recientes = [
             t for t in tareas 
             if t.estado == "completada" and t.fecha_completada and 
-            datetime.fromisoformat(t.fecha_completada) >= una_semana_atras
+            t.fecha_completada >= una_semana_atras  # ← CORRECCIÓN: Usar directamente
         ]
         
         return len(completadas_recientes)

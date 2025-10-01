@@ -39,11 +39,28 @@ class SQLiteStorage:
                     
                     tarea.id = row['id']
                     tarea.estado = row['estado']
-                    tarea.fecha_creacion = datetime.fromisoformat(row['fecha_creacion']) if row['fecha_creacion'] else None
-                    tarea.fecha_completada = datetime.fromisoformat(row['fecha_completada']) if row['fecha_completada'] else None
+                    
+                    # ✅ CORRECCIÓN: Validar fechas antes de convertir
+                    if row['fecha_creacion']:
+                        try:
+                            tarea.fecha_creacion = datetime.fromisoformat(row['fecha_creacion'])
+                        except (ValueError, AttributeError):
+                            tarea.fecha_creacion = None
+                    
+                    if row['fecha_completada']:
+                        try:
+                            tarea.fecha_completada = datetime.fromisoformat(row['fecha_completada'])
+                        except (ValueError, AttributeError):
+                            tarea.fecha_completada = None
+                    
+                    if row['actualizado_en']:
+                        try:
+                            tarea.actualizado_en = datetime.fromisoformat(row['actualizado_en'])
+                        except (ValueError, AttributeError):
+                            tarea.actualizado_en = None
+                    
                     tarea.creado_por = row['creado_por']
                     tarea.actualizado_por = row['actualizado_por']
-                    tarea.actualizado_en = datetime.fromisoformat(row['actualizado_en']) if row['actualizado_en'] else None
                     
                     tareas.append(tarea)
                     

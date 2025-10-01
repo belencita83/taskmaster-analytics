@@ -1,10 +1,11 @@
-import datetime
 # core/models.py
+from datetime import datetime
 
 class Tarea:
     """Clase que representa una tarea individual con campos de auditoría."""
     
-    def __init__(self, titulo, descripcion="", prioridad="media", proyecto=None, fecha_vencimiento=None, usuario="sistema"):
+    def __init__(self, titulo, descripcion="", prioridad="media", 
+                 proyecto=None, fecha_vencimiento=None, usuario="sistema"):
         # Información básica
         self.titulo = titulo
         self.descripcion = descripcion
@@ -33,6 +34,7 @@ class Tarea:
         self.estado = "completada"
         self.actualizado_por = usuario
         self.actualizado_en = datetime.now()
+        self.fecha_completada = datetime.now()  # ← IMPORTANTE: Establecer fecha
 
     def actualizar_auditoria(self, usuario="sistema"):
         """Actualiza campos de auditoría."""

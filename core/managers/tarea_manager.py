@@ -49,8 +49,13 @@ class TareaManager:
         for tarea in tareas:
             if (tarea.estado == "pendiente" and 
                 tarea.fecha_vencimiento and 
-                datetime.fromisoformat(tarea.fecha_vencimiento).date() < hoy):
-                vencidas.append(tarea)
+                isinstance(tarea.fecha_vencimiento, str)):  # Solo si es string
+                try:
+                    fecha_venc = datetime.fromisoformat(tarea.fecha_vencimiento).date()
+                    if fecha_venc < hoy:
+                        vencidas.append(tarea)
+                except (ValueError, AttributeError):
+                    continue  # Si hay error, saltar esta tarea
         
         return vencidas
     
@@ -62,9 +67,13 @@ class TareaManager:
         
         proximas = []
         for tarea in tareas:
-            if (tarea.estado == "pendiente" and tarea.fecha_vencimiento):
-                fecha_venc = datetime.fromisoformat(tarea.fecha_vencimiento).date()
-                if hoy <= fecha_venc <= fecha_limite:
-                    proximas.append(tarea)
+            if (tarea.estado == "pendiente" and tarea.fecha_vencimiento and
+                isinstance(tarea.fecha_vencimiento, str)):  # Solo si es string
+                try:
+                    fecha_venc = datetime.fromisoformat(tarea.fecha_vencimiento).date()
+                    if hoy <= fecha_venc <= fecha_limite:
+                        proximas.append(tarea)
+                except (ValueError, AttributeError):
+                    continue
         
         return proximas

@@ -11,7 +11,6 @@ class AnalyticsEngine:
     def generar_matriz_metricas(self, usuario=None, periodo_dias=30):
         """
         Genera una matriz completa de métricas como sistema de calificación.
-        Similar a lo que mencionó el ingeniero.
         """
         tareas = self.tarea_manager.storage.cargar_tareas(usuario)
         fecha_inicio = datetime.now() - timedelta(days=periodo_dias)
@@ -19,7 +18,7 @@ class AnalyticsEngine:
         # Filtrar tareas del período
         tareas_periodo = [
             t for t in tareas 
-            if t.fecha_creacion and datetime.fromisoformat(t.fecha_creacion) >= fecha_inicio
+            if t.fecha_creacion and t.fecha_creacion >= fecha_inicio
         ]
         
         matriz = {
@@ -66,8 +65,7 @@ class AnalyticsEngine:
         a_tiempo = 0
         for tarea in tareas_completadas:
             if (tarea.fecha_vencimiento and tarea.fecha_completada and
-                datetime.fromisoformat(tarea.fecha_completada) <= 
-                datetime.fromisoformat(tarea.fecha_vencimiento)):
+                tarea.fecha_completada <= self._parse_fecha(tarea.fecha_vencimiento)):
                 a_tiempo += 1
         
         calif_puntualidad = (a_tiempo / len(tareas_completadas) * 100) if tareas_completadas else 0
@@ -98,13 +96,13 @@ class AnalyticsEngine:
         
         for tarea in tareas:
             if tarea.fecha_creacion:
-                dia_creacion = datetime.fromisoformat(tarea.fecha_creacion).strftime('%A')
+                dia_creacion = tarea.fecha_creacion.strftime('%A')
                 dia_creacion_es = self._traducir_dia(dia_creacion)
                 if dia_creacion_es in matriz:
                     matriz[dia_creacion_es]['creadas'] += 1
             
             if tarea.estado == "completada" and tarea.fecha_completada:
-                dia_completado = datetime.fromisoformat(tarea.fecha_completada).strftime('%A')
+                dia_completado = tarea.fecha_completada.strftime('%A')
                 dia_completado_es = self._traducir_dia(dia_completado)
                 if dia_completado_es in matriz:
                     matriz[dia_completado_es]['completadas'] += 1
@@ -117,11 +115,11 @@ class AnalyticsEngine:
         
         for tarea in tareas:
             if tarea.fecha_creacion:
-                semana = datetime.fromisoformat(tarea.fecha_creacion).strftime('%Y-%U')
+                semana = tarea.fecha_creacion.strftime('%Y-%U')
                 tendencias[semana]['creadas'] += 1
             
             if tarea.estado == "completada" and tarea.fecha_completada:
-                semana = datetime.fromisoformat(tarea.fecha_completada).strftime('%Y-%U')
+                semana = tarea.fecha_completada.strftime('%Y-%U')
                 tendencias[semana]['completadas'] += 1
         
         # Ordenar por semana
@@ -148,21 +146,19 @@ class AnalyticsEngine:
     
     def _calcular_consistencia(self, tareas):
         """Calcula consistencia en la distribución del trabajo."""
-        if len(tareas) < 7:  # Muy pocas tareas para analizar consistencia
+        if len(tareas) < 7:
             return 100
         
-        # Agrupar tareas por día de la semana
         tareas_por_dia = defaultdict(int)
         for tarea in tareas:
             if tarea.fecha_creacion:
-                dia = datetime.fromisoformat(tarea.fecha_creacion).strftime('%A')
+                dia = tarea.fecha_creacion.strftime('%A')
                 tareas_por_dia[dia] += 1
         
-        # Calificar uniformidad (menos variación = mejor)
         if len(tareas_por_dia) > 0:
             promedio = len(tareas) / 7
             diferencias = sum(abs(count - promedio) for count in tareas_por_dia.values())
-            max_diferencia_posible = len(tareas)  # Peor caso: todas en un día
+            max_diferencia_posible = len(tareas)
             
             if max_diferencia_posible > 0:
                 return max(0, 100 - (diferencias / max_diferencia_posible * 100))
@@ -181,29 +177,31 @@ class AnalyticsEngine:
         
         tiempos = []
         for tarea in tareas_completadas:
-            inicio = datetime.fromisoformat(tarea.fecha_creacion)
-            fin = datetime.fromisoformat(tarea.fecha_completada)
-            tiempo = (fin - inicio).total_seconds() / 3600  # Horas
-            tiempos.append(tiempo)
+            try:
+                tiempo = (tarea.fecha_completada - tarea.fecha_creacion).total_seconds() / 3600
+                tiempos.append(tiempo)
+            except (ValueError, AttributeError, TypeError):
+                continue
         
-        # Tiempo promedio ideal: menos de 48 horas = 100 puntos
+        if not tiempos:
+            return 100
+        
         tiempo_promedio = sum(tiempos) / len(tiempos)
-        if tiempo_promedio <= 48:  # 2 días
+        if tiempo_promedio <= 48:
             return 100
         else:
-            return max(0, 100 - (tiempo_promedio - 48) / 24 * 10)  # Penalización progresiva
+            return max(0, 100 - (tiempo_promedio - 48) / 24 * 10)
     
     def _calcular_score_final(self, tareas):
         """Calcula score final ponderado."""
         calificaciones = self._calcular_calificaciones(tareas)
         
-        # Ponderaciones (pueden ajustarse)
         pesos = {
-            'completitud': 0.30,    # 30% - Lo más importante
-            'puntualidad': 0.25,    # 25% - Cumplir plazos
-            'priorizacion': 0.20,   # 20% - Enfocarse en lo importante
-            'consistencia': 0.15,   # 15% - Trabajo constante
-            'velocidad': 0.10       # 10% - Rapidez
+            'completitud': 0.30,
+            'puntualidad': 0.25, 
+            'priorizacion': 0.20,
+            'consistencia': 0.15,
+            'velocidad': 0.10
         }
         
         score_final = sum(calificaciones[categoria] * peso 
@@ -215,7 +213,7 @@ class AnalyticsEngine:
         """Traduce día de inglés a español."""
         traducciones = {
             'Monday': 'Lunes',
-            'Tuesday': 'Martes',
+            'Tuesday': 'Martes', 
             'Wednesday': 'Miércoles',
             'Thursday': 'Jueves',
             'Friday': 'Viernes',
@@ -223,3 +221,13 @@ class AnalyticsEngine:
             'Sunday': 'Domingo'
         }
         return traducciones.get(dia_ingles, dia_ingles)
+    
+    def _parse_fecha(self, fecha_str):
+        """Convierte string de fecha a datetime object de forma segura."""
+        if not fecha_str or not isinstance(fecha_str, str):
+            return None
+        
+        try:
+            return datetime.fromisoformat(fecha_str)
+        except (ValueError, AttributeError):
+            return None

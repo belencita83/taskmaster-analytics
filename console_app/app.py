@@ -44,11 +44,12 @@ class TaskMasterApp:
             print("5. 📊 Ver dashboard de productividad")
             print("6. 📈 Matriz avanzada de métricas")
             print("7. 📤 Exportar reportes")
+            print("8. ℹ️  Información del sistema")
+            print("9. 📈  Resumen ejecutivo")
             print("0. 💾 Guardar y salir")
-            print("99. 🔍 Debug BD")  # ← Temporal para debug
             print("="*50)
 
-            opcion = input("Selecciona una opción (0-7): ").strip()
+            opcion = input("Selecciona una opción (0-9): ").strip()
 
             if opcion == "1":
                 self.crear_tarea()
@@ -64,8 +65,10 @@ class TaskMasterApp:
                 self.mostrar_matriz_metricas()
             elif opcion == "7":
                 self.exportar_reportes()
-            elif opcion == "99":
-                self.debug_base_datos()
+            elif opcion == "8":
+                self.mostrar_info_sistema()
+            elif opcion == "9":
+                self.resumen_rapido()
             elif opcion == "0":
                 self.guardar_y_salir()
                 break
@@ -298,6 +301,45 @@ class TaskMasterApp:
             
         except Exception as e:
             print(f"❌ Error accediendo a la base de datos: {e}")
+
+    def debug_fechas_tareas(self):
+        """Método temporal para debuggear fechas de tareas."""
+        print("\n🔍 DEBUG - FECHAS DE TAREAS")
+        print("="*40)
+        
+        for i, tarea in enumerate(self.tareas, 1):
+            print(f"{i}. {tarea.titulo}")
+            print(f"   • fecha_creacion: {tarea.fecha_creacion} (tipo: {type(tarea.fecha_creacion)})")
+            print(f"   • fecha_completada: {tarea.fecha_completada} (tipo: {type(tarea.fecha_completada)})")
+            print(f"   • actualizado_en: {tarea.actualizado_en} (tipo: {type(tarea.actualizado_en)})")
+            print()
+
+    def mostrar_info_sistema(self):
+        """Muestra información del sistema para la exposición."""
+        print("\n" + "="*50)
+        print("ℹ️  INFORMACIÓN DEL SISTEMA")
+        print("="*50)
+        print(f"• Tareas registradas: {len(self.tareas)}")
+        print(f"• Base de datos: SQLite (data/taskmaster.db)")
+        print(f"• Arquitectura: Por capas (Models, Managers, Storage)")
+        print(f"• Métricas: 5 dimensiones de calificación")
+        print(f"• Exportación: 3 formatos (CSV, JSON, TXT)")
+    
+    def resumen_rapido(self):
+        """Muestra un resumen ejecutivo rápido."""
+        print("\n" + "="*50)
+        print("📈 RESUMEN EJECUTIVO")
+        print("="*50)
+        print(f"• Tareas totales: {len(self.tareas)}")
+        print(f"• Completadas: {sum(1 for t in self.tareas if t.estado == 'completada')}")
+        print(f"• Proyectos activos: {len(set(t.proyecto for t in self.tareas if t.proyecto))}")
+        
+        # Score rápido
+        try:
+            matriz = self.analytics_engine.generar_matriz_metricas()
+            print(f"• Score de productividad: {matriz['score_final']}/100")
+        except:
+            print("• Score de productividad: (calculando...)")
 
 def main():
     """Función principal de la aplicación."""

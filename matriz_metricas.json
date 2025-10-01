@@ -1,13 +1,13 @@
 {
   "periodo_analisis": "Últimos 30 días",
-  "fecha_generacion": "2025-09-24T03:25:31.514008",
+  "fecha_generacion": "2025-09-30T23:12:21.963453",
   "usuario": "todos",
   "calificaciones": {
-    "completitud": 0,
-    "puntualidad": 0,
-    "priorizacion": 0,
-    "consistencia": 0,
-    "velocidad": 0
+    "completitud": 25.0,
+    "puntualidad": 0.0,
+    "priorizacion": 50.0,
+    "consistencia": 100,
+    "velocidad": 100
   },
   "matriz_productividad": {
     "Lunes": {
@@ -15,8 +15,8 @@
       "completadas": 0
     },
     "Martes": {
-      "creadas": 0,
-      "completadas": 0
+      "creadas": 4,
+      "completadas": 1
     },
     "Miércoles": {
       "creadas": 0,
@@ -39,7 +39,31 @@
       "completadas": 0
     }
   },
-  "analisis_temporal": {},
-  "eficiencia_proyectos": {},
-  "score_final": 0.0
+  "analisis_temporal": {
+    "2025-39": {
+      "creadas": 4,
+      "completadas": 1
+    }
+  },
+  "eficiencia_proyectos": {
+    "Salud": {
+      "total_tareas": 1,
+      "completadas": 0,
+      "porcentaje_completado": 0.0,
+      "tareas_pendientes": 1
+    },
+    "Desarrollo": {
+      "total_tareas": 1,
+      "completadas": 1,
+      "porcentaje_completado": 100.0,
+      "tareas_pendientes": 0
+    },
+    "Universidad": {
+      "total_tareas": 2,
+      "completadas": 0,
+      "porcentaje_completado": 0.0,
+      "tareas_pendientes": 2
+    }
+  },
+  "score_final": 42.5
 }

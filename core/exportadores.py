@@ -11,7 +11,11 @@ class ExportadorReportes:
         """Exporta reporte a formato CSV."""
         if not filename:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"reporte_tareas_{timestamp}.csv"
+            filename = f"reportes/reporte_tareas_{timestamp}.csv"  # ← Carpeta reportes/
+        
+        # Crear carpeta si no existe
+        import os
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         
         with open(filename, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
