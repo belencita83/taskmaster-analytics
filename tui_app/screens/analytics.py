@@ -17,13 +17,14 @@ class AnalyticsScreen(Screen):
     CSS = """
     AnalyticsScreen {
         align: center middle;
+        background: #1A1B25;
     }
     
     .container {
-        width: 80%;
-        height: 80%;
-        border: panel $accent;
-        background: $panel;
+        width: 70%;
+        height: 60%;
+        border: round #FFD166;  /* Amarillo */
+        background: #2A2B38;
         padding: 2;
     }
     
@@ -31,9 +32,10 @@ class AnalyticsScreen(Screen):
         width: 100%;
         height: 3;
         content-align: center middle;
-        background: $accent;
+        background: #FFD166;  /* Amarillo */
         color: $text;
         text-style: bold;
+        padding: 1;
     }
     
     .buttons {
@@ -42,16 +44,25 @@ class AnalyticsScreen(Screen):
         align-horizontal: center;
         padding: 1;
     }
+
+    #refresh {
+        background: #9B5DE5;  /* Morado */
+        color: #1A1B25;
+    }
+    
+    #back {
+        background: #FF9E64;  /* Naranja */
+        color: #1A1B25;
+    }
     """
 
     def compose(self):
         """Interfaz simple de analytics."""
         yield Header()
         yield Container(
-            Static("ANALYTICS - METRICAS", classes="header"),
+            Static("🍂   ANALYTICS - METRICAS   🍂", classes="header"),
             Vertical(
                 DataTable(id="metrics_table"),
-                
                 Horizontal(
                     Button("Actualizar", id="refresh", variant="primary"),
                     Button("Volver", id="back"),
@@ -70,7 +81,7 @@ class AnalyticsScreen(Screen):
         """Carga métricas útiles."""
         table = self.query_one(DataTable)
         table.clear()
-        table.add_columns("Metrica", "Valor")
+        table.add_columns("Métrica", "Valor")
         
         try:
             gestor = GestorAlmacenamiento("sqlite")
@@ -104,7 +115,7 @@ class AnalyticsScreen(Screen):
     def refresh_metrics(self):
         """Actualiza metricas."""
         self.load_metrics()
-        self.notify("Metricas actualizadas")
+        self.notify("Métricas actualizadas")
 
     @on(Button.Pressed, "#back")
     def go_back(self):

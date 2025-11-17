@@ -46,5 +46,4 @@ class DatabaseManager:
                     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
-            
             conn.commit()

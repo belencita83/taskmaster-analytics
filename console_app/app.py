@@ -44,8 +44,8 @@ class TaskMasterApp:
             print("5. 📊 Ver dashboard de productividad")
             print("6. 📈 Matriz avanzada de métricas")
             print("7. 📤 Exportar reportes")
-            print("8. ℹ️  Información del sistema")
-            print("9. 📈  Resumen ejecutivo")
+            print("8. ℹ️ Información del sistema")
+            print("9. 📈 Resumen ejecutivo")
             print("0. 💾 Guardar y salir")
             print("="*50)
 

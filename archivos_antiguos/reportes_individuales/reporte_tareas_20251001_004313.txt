@@ -1,0 +1,27 @@
+============================================================
+           REPORTE DE TAREAS - TASKMASTER ANALYTICS
+============================================================
+
+Fecha generación: 2025-10-01T00:43:11.168816
+Usuario: todos
+
+RESUMEN GENERAL:
+  • Total tareas: 5
+  • Completadas: 2
+  • Pendientes: 3
+  • Porcentaje completado: 40.0%
+
+TAREAS POR ESTADO:
+  • Pendiente: 3
+  • En_progreso: 0
+  • Completada: 2
+
+TAREAS POR PRIORIDAD:
+  • Baja: 1
+  • Media: 1
+  • Alta: 3
+
+MÉTRICAS ADICIONALES:
+  • Tareas vencidas: 0
+  • Tareas próximas a vencer: 0
+  • Eficiencia semanal: 2
