@@ -1,18 +1,55 @@
-# Entornos virtuales de Python
-venv/
-env/
-.venv/
-
-# Archivos de base de datos (los de SQLite van aquí)
-*.db
-*.sqlite3
-
-# Archivos de entorno con contraseñas (nunca los subas!)
-.env
-
-# Directorio de caché de Python
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Data
+data/backups/
 
 # Directorio de dependencias instaladas (si usas virtualenv, no las subas)
 lib/

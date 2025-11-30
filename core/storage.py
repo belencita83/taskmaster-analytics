@@ -23,4 +23,18 @@ class GestorAlmacenamiento:
         return True
     
     def eliminar_tarea(self, tarea_id):
-        return self.almacenamiento.eliminar_tarea(tarea_id)
+        """Eliminar una tarea - LLAMANDO AL MÉTODO CORRECTO."""
+        try:
+            # Llamar al método eliminar_tarea del SQLiteStorage
+            resultado = self.almacenamiento.eliminar_tarea(tarea_id)
+            
+            if resultado:
+                print(f"Tarea ID {tarea_id} eliminada correctamente")
+                return True
+            else:
+                print(f"No se pudo eliminar la tarea ID {tarea_id}")
+                return False
+                
+        except Exception as e:
+            print(f"Error en GestorAlmacenamiento.eliminar_tarea: {str(e)}")
+            return False

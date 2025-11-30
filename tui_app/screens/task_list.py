@@ -1,6 +1,6 @@
 # tui_app/screens/task_list.py
 from textual.screen import Screen
-from textual.widgets import DataTable, Static, Button, Header, Footer, OptionList, Input
+from textual.widgets import Static, Button, Header, Footer, OptionList, Input
 from textual.containers import Container, Horizontal, Vertical
 from textual import on
 from textual.widgets.option_list import Option
@@ -8,11 +8,12 @@ import sys
 import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from core.storage import GestorAlmacenamiento
+from tui_app.controllers.tarea_controller import TareaController
 
 class TaskListScreen(Screen):
-    """Pantalla de lista de tareas con menú funcional - CORREGIDO"""
+    """Pantalla de lista de tareas con menú funcional - USANDO CONTROLADOR"""
     
+    # ... (tu CSS se mantiene igual)
     CSS = """
     TaskListScreen {
         align: center middle;
@@ -22,7 +23,7 @@ class TaskListScreen(Screen):
     .container {
         width: 70%;
         height: auto;
-        border: round #9B5DE5;  /* Morado */
+        border: round #9B5DE5;
         background: #2A2B38;
     }
     
@@ -30,7 +31,7 @@ class TaskListScreen(Screen):
         width: 100%;
         height: 3;
         content-align: center middle;
-        background: #9B5DE5;  /* Morado */
+        background: #9B5DE5;
         color: #FFFFFF;
         text-style: bold;
         padding: 1;
@@ -39,7 +40,7 @@ class TaskListScreen(Screen):
     .instructions {
         width: 100%;
         height: 1;
-        color: #FFD166;  /* Amarillo */
+        color: #FFD166;
         background: #2A2B38;
         padding: 0;
         text-style: italic;
@@ -48,7 +49,7 @@ class TaskListScreen(Screen):
     .search-label {
         width: 100%;
         height: 1;
-        color: #FFD166;  /* Amarillo */
+        color: #FFD166;
         background: #2A2B38;
         padding: 0;
     }
@@ -57,7 +58,7 @@ class TaskListScreen(Screen):
         width: 100%;
         height: 1;
         content-align: center middle;
-        color: #FFD166;  /* Amarillo */
+        color: #FFD166;
         background: #2A2B38;
         padding: 0;
         text-style: bold;
@@ -67,7 +68,7 @@ class TaskListScreen(Screen):
         width: 100%;
         height: 1;
         content-align: center middle;
-        color: #06D6A0;  /* Turquesa */
+        color: #06D6A0;
         background: #2A2B38;
         padding: 0;
     }
@@ -83,7 +84,7 @@ class TaskListScreen(Screen):
     OptionList {
         background: #2A2B38;
         padding: 1;
-        border: solid #E83E8C;  /* Rosado */
+        border: solid #E83E8C;
         margin: 1;
     }
     
@@ -96,17 +97,22 @@ class TaskListScreen(Screen):
     }
     
     #refresh {
-        background: #FFD166;  /* Amarillo */
+        background: #FFD166;
         color: #1A1B25;
     }
     
     #new {
-        background: #E83E8C;  /* Rosado */
+        background: #E83E8C;
         color: #1A1B25;
     }
     
     #back {
-        background: #FF9E64;  /* Naranja */
+        background: #FF9E64;
+        color: #1A1B25;
+    }
+
+    #debug {
+        background: #FF9E64;
         color: #1A1B25;
     }
     """
@@ -117,18 +123,23 @@ class TaskListScreen(Screen):
         ("escape", "go_back", "Atrás"),
     ]
 
+    def __init__(self):
+        super().__init__()
+        self.controller = TareaController()
+        self.tareas = []
+
     def compose(self):
         """Interfaz con menú de opciones."""
         yield Header()
         yield Container(
-            Static("🫧   LISTA DE TAREAS   🫧", classes="header"),
+            Static("🫧     LISTA DE TAREAS    🫧", classes="header"),
             
             Static("Escribe para buscar:", classes="search-label"),
             Input(placeholder="Buscar por título...", id="search_input"),
             Static("Estadísticas rápidas:", classes="stats-label"),
             Static("Cargando...", id="stats_display"),
             
-            Static(" Selecciona una tarea del menú para cambiar estado", classes="instructions"),
+            Static("Selecciona una tarea del menú para cambiar estado", classes="instructions"),
             OptionList(id="tasks_menu"),
             Horizontal(
                 Button("Actualizar", id="refresh", variant="warning"),
@@ -141,113 +152,84 @@ class TaskListScreen(Screen):
         yield Footer()
 
     def on_mount(self):
-        """Carga las tareas al iniciar."""
-        self.load_tasks()
+        """USA EL CONTROLADOR para cargar tareas"""
+        self.cargar_tareas()
 
+    def cargar_tareas(self, search_term=None):
+        """Carga tareas usando el Controlador"""
+        if search_term:
+            resultado = self.controller.buscar_tareas(search_term)
+        else:
+            resultado = self.controller.obtener_todas_tareas()
+        
+        if resultado['success']:
+            self.tareas = resultado['data']
+            self.actualizar_lista_tareas()
+            self.actualizar_estadisticas()
+        else:
+            self.notify(resultado['message'], severity="error")
 
-    def load_tasks(self, search_term=None):
-        menu = self.query_one(OptionList)
+    def actualizar_lista_tareas(self):
+        """Actualiza la lista visual de tareas."""
+        menu = self.query_one("#tasks_menu", OptionList)
         menu.clear_options()
         
-        try:
-            gestor = GestorAlmacenamiento("sqlite")
-            tareas = gestor.cargar_tareas()
-            
-            if search_term:
-                tareas = [t for t in tareas if search_term.lower() in t.titulo.lower()]
-            
-            # Calcular estadísticas
-            total = len(tareas)
-            pendientes = sum(1 for t in tareas if t.estado == "pendiente")
-            en_progreso = sum(1 for t in tareas if t.estado == "en_progreso")
-            completadas = sum(1 for t in tareas if t.estado == "completada")
-            
-            # Actualizar display de estadísticas
-            stats = self.query_one("#stats_display", Static)
-            stats.update(f"⏳ {pendientes} 🎨 {en_progreso} 🎉 {completadas} | Total: {total}")
-            
-            if not tareas:
-                menu.add_option(Option("No hay tareas", id="none"))
-                return
-                
-            for tarea in tareas:
-                if hasattr(tarea, 'id'):
-                    estado = tarea.estado or "pendiente"
-                    
-                    estado_emoji = {
-                        "pendiente": "⏳",
-                        "en_progreso": "🎨",
-                        "completada": "🎉"
-                    }
-                    
-                    prioridad_emoji = {
-                        "alta": "🔴",
-                        "media": "🟡", 
-                        "baja": "🟢"
-                    }
-                    
-                    prioridad = tarea.prioridad or "media"
-                    
-                    texto = f"{tarea.id}. {tarea.titulo} - {estado_emoji.get(estado)} {estado} - {prioridad_emoji.get(prioridad)}"
-                    menu.add_option(Option(texto, id=str(tarea.id)))
-                    
-        except Exception as e:
-            menu.add_option(Option("Error cargando tareas", id="error"))
+        if not self.tareas:
+            menu.add_option(Option("📭 No hay tareas", id="none"))
+            return
+        
+        for tarea in self.tareas:
+            display_text = tarea['display_text']
+            menu.add_option(Option(display_text, id=str(tarea['id'])))
+
+    def actualizar_estadisticas(self):
+        """Actualiza estadísticas usando el Controlador"""
+        resultado = self.controller.obtener_estadisticas()
+        
+        if resultado['success']:
+            data = resultado['data']
+            stats_text = f"⏳ {data['por_estado']['pendiente']} 🎨 {data['por_estado']['en_progreso']} 🎉 {data['por_estado']['completada']} | Total: {data['total_tareas']}"
+            self.query_one("#stats_display", Static).update(stats_text)
 
     @on(Input.Submitted, "#search_input")
     def on_search_submitted(self, event):
         """Buscar cuando se presiona Enter."""
         search_term = event.value.strip()
-        self.load_tasks(search_term if search_term else None)
+        self.cargar_tareas(search_term if search_term else None)
 
     @on(Input.Changed, "#search_input")  
     def on_search_changed(self, event):
         """Buscar en tiempo real mientras se escribe."""
         search_term = event.value.strip()
-        if len(search_term) >= 2 or search_term == "":  # Buscar después de 2 caracteres o cuando se borra
-            self.load_tasks(search_term if search_term else None)
+        if len(search_term) >= 2 or search_term == "":
+            self.cargar_tareas(search_term if search_term else None)
 
     @on(OptionList.OptionSelected)
     def change_status(self, event):
-        """Cambia el estado al seleccionar una tarea del menú."""
+        """Cambia estado usando el Controlador"""
         if event.option.id != "none" and event.option.id != "error":
-            task_id = int(event.option.id)
-            
             try:
-                gestor = GestorAlmacenamiento("sqlite")
-                tareas = gestor.cargar_tareas()
-                tarea = next((t for t in tareas if t.id == task_id), None)
+                task_id = int(event.option.id)
+                resultado = self.controller.cambiar_estado_tarea(task_id)
                 
-                if tarea:
-                    # Cambiar estado en ciclo
-                    if tarea.estado == "pendiente":
-                        new_status = "en_progreso"
-                        emoji = "🎨"
-                    elif tarea.estado == "en_progreso":
-                        new_status = "completada"
-                        emoji = "🎉"
-                    else:
-                        new_status = "pendiente"
-                        emoji = "⏳"
-                    
-                    tarea.estado = new_status
-                    gestor.guardar_tarea(tarea)
-                    
-                    self.notify(f"{emoji} Tarea {task_id} ahora está: {new_status}")
-                    # Recargar manteniendo la búsqueda actual
+                if resultado['success']:
+                    self.notify(resultado['message'], severity="information")
+                    # Recargar manteniendo búsqueda actual
                     search_input = self.query_one("#search_input", Input)
                     current_search = search_input.value.strip()
-                    self.load_tasks(current_search if current_search else None)
+                    self.cargar_tareas(current_search if current_search else None)
+                else:
+                    self.notify(resultado['message'], severity="error")
                     
             except Exception as e:
-                self.notify(f"Error: {e}")
+                self.notify(f"Error: {str(e)}", severity="error")
 
     @on(Button.Pressed, "#refresh")
     def refresh_tasks(self):
         """Actualiza la lista."""
         search_input = self.query_one("#search_input", Input)
-        search_input.value = ""  # Limpiar búsqueda
-        self.load_tasks()
+        search_input.value = ""
+        self.cargar_tareas()
         self.notify("Lista actualizada")
 
     def action_new_task(self):
@@ -262,10 +244,8 @@ class TaskListScreen(Screen):
 
     @on(Button.Pressed, "#new")
     def new_task(self):
-        """Abre formulario de nueva tarea."""
         self.action_new_task()
 
     @on(Button.Pressed, "#back")
     def go_back(self):
-        """Regresa al menu."""
         self.action_go_back()
